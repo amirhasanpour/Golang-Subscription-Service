@@ -13,6 +13,7 @@ import (
 
 	"github.com/alexedwards/scs/redisstore"
 	"github.com/alexedwards/scs/v2"
+	"github.com/amirhasanpour/golang-subscription-service/data"
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v4"
@@ -39,11 +40,12 @@ func main() {
 
 	// setup the application config
 	app := Config{
-		Session: sessions,
-		InfoLog: infoLog,
+		Session:  sessions,
+		InfoLog:  infoLog,
 		ErrorLog: errorLog,
-		DB: db,
-		Wait: &wg,
+		DB: 	  db,
+		Wait: 	  &wg,
+		Models:   data.New(db),
 	}
 
 	// setup mail
