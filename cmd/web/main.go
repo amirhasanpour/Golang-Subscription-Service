@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"encoding/gob"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,37 +25,39 @@ import (
 const webPort = "8080"
 
 func main() {
-	// connect to the database
-	db := initDB()
-
-	// create sessions
-	sessions := initSessions()
-
 	// create loggers
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	// create channels
-
-	// create waitgroup
 	wg := sync.WaitGroup{}
 
-	// setup the application config
+	// setup the application config (partially)
 	app := Config{
-		Session:  sessions,
-		InfoLog:  infoLog,
+		InfoLog: infoLog,
 		ErrorLog: errorLog,
-		DB: 	  db,
-		Wait: 	  &wg,
-		Models:   data.New(db),
+		Wait: &wg,
 	}
 
-	// setup mail
+	// define flags directly onto the Config struct
+	flag.StringVar(&app.DSN, "DSN", "host=localhost port=5431 user=postgres password=password dbname=subscriptionservice sslmode=disable timezone=UTC connect_timeout=5", "Postgres connection string")
+	flag.StringVar(&app.REDIS, "REDIS", "127.0.0.1:6379", "Redis connection string")
+	flag.Parse()
 
-	// listen for signals
+	// connect to the database with correct DSN
+	db := connectToDB(app.DSN)
+	if db == nil {
+		log.Panic("can't connect to database")
+	}
+	app.DB = db
+	app.Models = data.New(db)
+
+	// initialize sessions with correct Redis address
+	app.Session = initSessions(app.REDIS)
+
+	// listen for shutdown
 	go app.listenForShutdown()
 
-	// listen for web connections
+	// start web server
 	app.serve()
 }
 
@@ -71,18 +75,8 @@ func (app *Config) serve() {
 	}
 }
 
-func initDB() *sql.DB {
-	conn := connectToDB()
-	if conn == nil {
-		log.Panic("can't connect to database")
-	}
-	return conn
-}
-
-func connectToDB() *sql.DB {
+func connectToDB(dsn string) *sql.DB {
 	counts := 0
-
-	dsn := os.Getenv("DSN")
 
 	for {
 		connection, err := openDB(dsn)
@@ -94,18 +88,15 @@ func connectToDB() *sql.DB {
 		}
 
 		if counts > 10 {
-			return  nil
+			return nil
 		}
 
 		log.Println("Backing off for 1 second")
 		time.Sleep(1 * time.Second)
 		counts++
-		
-		continue
 	}
-
-
 }
+
 
 func openDB(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("pgx", dsn)
@@ -121,10 +112,11 @@ func openDB(dsn string) (*sql.DB, error) {
 	return  db, nil
 }
 
-func initSessions() *scs.SessionManager {
-	// setup session
+func initSessions(redisAddr string) *scs.SessionManager {
+	gob.Register(data.User{})
+
 	session := scs.New()
-	session.Store = redisstore.New(initRedis())
+	session.Store = redisstore.New(initRedis(redisAddr))
 	session.Lifetime = 24 * time.Hour
 	session.Cookie.Persist = true
 	session.Cookie.SameSite = http.SameSiteLaxMode
@@ -133,15 +125,13 @@ func initSessions() *scs.SessionManager {
 	return session
 }
 
-func initRedis() *redis.Pool {
-	redisPool := &redis.Pool{
+func initRedis(redisAddr string) *redis.Pool {
+	return &redis.Pool{
 		MaxIdle: 10,
 		Dial: func() (redis.Conn, error) {
-			return  redis.Dial("tcp", os.Getenv("REDIS"))
+			return redis.Dial("tcp", redisAddr)
 		},
 	}
-
-	return redisPool
 }
 
 func (app *Config) listenForShutdown() {

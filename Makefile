@@ -1,6 +1,4 @@
-DSN=host=localhost port=5431 user=postgres password=password dbname=subscriptionservice sslmode=disable timezone=UTC connect_timeout=5
 BINARY_NAME=subscriptionapp.exe
-REDIS=127.0.0.1:6379
 
 ## build: builds all binaries
 build:
@@ -9,7 +7,7 @@ build:
 
 run: build
 	@echo Starting...
-	set DSN=${DSN} && set REDIS=${REDIS} && start /B ${BINARY_NAME}
+	@${BINARY_NAME}
 	@echo back end started!
 
 clean:

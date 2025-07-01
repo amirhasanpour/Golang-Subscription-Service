@@ -16,4 +16,6 @@ type Config struct {
 	ErrorLog *log.Logger
 	Wait     *sync.WaitGroup
 	Models	 data.Models
+	DSN		 string
+	REDIS    string
 }
