@@ -18,4 +18,5 @@ type Config struct {
 	Models	 data.Models
 	DSN		 string
 	REDIS    string
+	Mailer 	 Mail
 }
