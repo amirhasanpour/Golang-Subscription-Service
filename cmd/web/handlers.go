@@ -1,6 +1,12 @@
 package main
 
-import "net/http"
+import (
+	"fmt"
+	"html/template"
+	"net/http"
+
+	"github.com/amirhasanpour/golang-subscription-service/data"
+)
 
 func (app *Config) HomePage(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "home.page.gohtml", nil)
@@ -75,11 +81,44 @@ func (app *Config) RegisterPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		app.ErrorLog.Println(err)
+	}
+
 	// create a user
+	u := data.User{
+		Email: r.Form.Get("email"),
+		FirstName: r.Form.Get("first-name"),
+		LastName: r.Form.Get("last-name"),
+		Password: r.Form.Get("password"),
+		Active: 0,
+		IsAdmin: 0,
+	}
+
+	_, err = u.Insert(u)
+	if err != nil {
+		app.Session.Put(r.Context(), "error", "Unable to create user.")
+		http.Redirect(w, r, "/register", http.StatusSeeOther)
+		return
+	}
 
 	// send an activation eamil
+	url := fmt.Sprintf("http://localhost/activate?email=%s", u.Email)
+	signedURL := GenerateTokenFromString(url)
+	app.InfoLog.Println(signedURL)
 
-	// subscribe the user to an account
+	msg := Message{
+		To: u.Email,
+		Subject: "Active your account",
+		Template: "confirmation-email",
+		Data: template.HTML(signedURL),
+	}
+
+	app.sendEmail(msg)
+
+	app.Session.Put(r.Context(), "flash", "Confirmation email sent. Check your email.")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (app *Config) ActiveAccount(w http.ResponseWriter, r *http.Request) {
@@ -90,4 +129,6 @@ func (app *Config) ActiveAccount(w http.ResponseWriter, r *http.Request) {
 	// send an email with attachments
 
 	// send an email with invoice attached
+
+	// subscribe the user to an account
 }
