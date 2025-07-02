@@ -26,6 +26,7 @@ func (app *Config) routes() http.Handler {
 	mux.Get("/activate", app.ActiveAccount)
 
 	mux.Get("/plans", app.ChooseSubscription)
+	mux.Get("/subscribe", app.SubcribeToPlan)
 
 	return mux
 }
