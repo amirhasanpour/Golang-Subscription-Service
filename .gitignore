@@ -3,3 +3,6 @@
 
 # Executable Files
 /subscriptionapp.exe
+
+# tmp Folder Files
+/tmp/*
