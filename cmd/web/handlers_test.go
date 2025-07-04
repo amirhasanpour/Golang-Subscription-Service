@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -70,5 +71,30 @@ func Test_Pages(t *testing.T) {
 				t.Errorf("%s failed: expected to find %s, but did not", e.name, e.expectedHTML)
 			}
 		}
+	}
+}
+
+func TestConfig_PostLoginPage(t *testing.T) {
+	pathToTemplates = "./templates"
+
+	postedData := url.Values{
+		"email": {"admin@example.com"},
+		"password": {"abc123abc123abc123abc123"},
+	}
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/login", strings.NewReader(postedData.Encode()))
+	ctx := getCtx(req)
+	req = req.WithContext(ctx)
+
+	handler := http.HandlerFunc(testApp.PostLoginPage)
+	handler.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusSeeOther {
+		t.Error("wrong code returned")
+	}
+
+	if !testApp.Session.Exists(ctx, "userID") {
+		t.Error("did not find userID in session")
 	}
 }
