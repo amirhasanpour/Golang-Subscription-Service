@@ -9,7 +9,7 @@ type UserInterface interface {
 	DeleteByID(id int) error
 	Insert(user User) (int, error)
 	ResetPassword(password string) error
-	PasswordMatches(plainText string) (bool, error)
+	PasswordMatches(plainText string, userPass string) (bool, error)
 }
 
 type PlanInterface interface {

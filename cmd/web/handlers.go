@@ -43,8 +43,10 @@ func (app *Config) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userPass := user.Password
+
 	// check password
-	validPassword, err := app.Models.User.PasswordMatches(password)
+	validPassword, err := app.Models.User.PasswordMatches(password, userPass)
 	if err != nil {
 		app.Session.Put(r.Context(), "error", "invalid credentials.")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
