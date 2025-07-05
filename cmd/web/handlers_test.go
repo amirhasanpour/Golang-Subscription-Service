@@ -98,3 +98,27 @@ func TestConfig_PostLoginPage(t *testing.T) {
 		t.Error("did not find userID in session")
 	}
 }
+
+func TestConfig_SubcribeToPlan(t *testing.T) {
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/subscribe?id=1", nil)
+	ctx := getCtx(req)
+	req = req.WithContext(ctx)
+
+	testApp.Session.Put(ctx, "user", data.User{
+		ID: 1,
+		Email: "admin@example.com",
+		FirstName: "Admin",
+		LastName: "User",
+		Active: 1,
+	})
+
+	handler := http.HandlerFunc(testApp.SubcribeToPlan)
+	handler.ServeHTTP(rr, req)
+
+	testApp.Wait.Wait()
+
+	if rr.Code != http.StatusSeeOther {
+		t.Errorf("exepted status code of statusseeother, but got %d", rr.Code)
+	}
+}
