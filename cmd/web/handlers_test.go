@@ -7,38 +7,38 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/amirhasanpour/golang-subscription-service/data"
+	"github.com/amirhasanpour/subscription-service/data"
 )
 
 var pageTests = []struct {
-	name 			   string
-	url  			   string
+	name               string
+	url                string
 	expectedStatusCode int
-	handler 		   http.HandlerFunc
-	sessionData   	   map[string]any
-	expectedHTML 	   string
+	handler            http.HandlerFunc
+	sessionData        map[string]any
+	expectedHTML       string
 }{
 	{
-		name: "home",
-		url: "/",
+		name:               "home",
+		url:                "/",
 		expectedStatusCode: http.StatusOK,
-		handler: testApp.HomePage,
+		handler:            testApp.HomePage,
 	},
 	{
-		name: "login page",
-		url: "/login",
+		name:               "login page",
+		url:                "/login",
 		expectedStatusCode: http.StatusOK,
-		handler: testApp.LoginPage,
-		expectedHTML: `<h1 class="mt-5">Login</h1>`,
+		handler:            testApp.LoginPage,
+		expectedHTML:       `<h1 class="mt-5">Login</h1>`,
 	},
 	{
-		name: "logout",
-		url: "/logout",
+		name:               "logout",
+		url:                "/logout",
 		expectedStatusCode: http.StatusOK,
-		handler: testApp.LoginPage,
+		handler:            testApp.LoginPage,
 		sessionData: map[string]any{
 			"userID": 1,
-			"user": data.User{},
+			"user":   data.User{},
 		},
 	},
 }
@@ -62,7 +62,7 @@ func Test_Pages(t *testing.T) {
 		e.handler.ServeHTTP(rr, req)
 
 		if rr.Code != e.expectedStatusCode {
-			t.Errorf("%s failed: expected %d, but got %d",e.name, e.expectedStatusCode, rr.Code)
+			t.Errorf("%s failed: expected %d, but got %d", e.name, e.expectedStatusCode, rr.Code)
 		}
 
 		if len(e.expectedHTML) > 0 {
@@ -78,7 +78,7 @@ func TestConfig_PostLoginPage(t *testing.T) {
 	pathToTemplates = "./templates"
 
 	postedData := url.Values{
-		"email": {"admin@example.com"},
+		"email":    {"admin@example.com"},
 		"password": {"abc123abc123abc123abc123"},
 	}
 
@@ -106,11 +106,11 @@ func TestConfig_SubcribeToPlan(t *testing.T) {
 	req = req.WithContext(ctx)
 
 	testApp.Session.Put(ctx, "user", data.User{
-		ID: 1,
-		Email: "admin@example.com",
+		ID:        1,
+		Email:     "admin@example.com",
 		FirstName: "Admin",
-		LastName: "User",
-		Active: 1,
+		LastName:  "User",
+		Active:    1,
 	})
 
 	handler := http.HandlerFunc(testApp.SubcribeToPlan)

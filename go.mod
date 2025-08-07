@@ -1,4 +1,4 @@
-module github.com/amirhasanpour/golang-subscription-service
+module github.com/amirhasanpour/subscription-service
 
 go 1.23.5
 

@@ -15,7 +15,7 @@ import (
 
 	"github.com/alexedwards/scs/redisstore"
 	"github.com/alexedwards/scs/v2"
-	"github.com/amirhasanpour/golang-subscription-service/data"
+	"github.com/amirhasanpour/subscription-service/data"
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v4"
@@ -33,10 +33,10 @@ func main() {
 
 	// setup the application config (partially)
 	app := Config{
-		InfoLog: infoLog,
-		ErrorLog: errorLog,
-		Wait: &wg,
-		ErrorChan: make(chan error),
+		InfoLog:       infoLog,
+		ErrorLog:      errorLog,
+		Wait:          &wg,
+		ErrorChan:     make(chan error),
 		ErrorChanDone: make(chan bool),
 	}
 
@@ -73,9 +73,9 @@ func main() {
 func (app *Config) listenForErrors() {
 	for {
 		select {
-		case err := <- app.ErrorChan:
+		case err := <-app.ErrorChan:
 			app.ErrorLog.Println(err)
-		case <- app.ErrorChanDone:
+		case <-app.ErrorChanDone:
 			return
 		}
 	}
@@ -84,7 +84,7 @@ func (app *Config) listenForErrors() {
 func (app *Config) serve() {
 	// start http server
 	srv := &http.Server{
-		Addr: fmt.Sprintf(":%s", webPort),
+		Addr:    fmt.Sprintf(":%s", webPort),
 		Handler: app.routes(),
 	}
 
@@ -117,7 +117,6 @@ func connectToDB(dsn string) *sql.DB {
 	}
 }
 
-
 func openDB(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
@@ -129,7 +128,7 @@ func openDB(dsn string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	return  db, nil
+	return db, nil
 }
 
 func initSessions(redisAddr string) *scs.SessionManager {
@@ -187,16 +186,16 @@ func (app *Config) createMail() Mail {
 	mailerDoneChan := make(chan bool)
 
 	m := Mail{
-		Domain: "localhost",
-		Host: "localhost",
-		Port: 1025,
-		Encryption: "none",
-		FromName: "Info",
+		Domain:      "localhost",
+		Host:        "localhost",
+		Port:        1025,
+		Encryption:  "none",
+		FromName:    "Info",
 		FromAddress: "info@mycompany.com",
-		Wait: app.Wait,
-		ErrorChan: errorChan,
-		MailerChan: mailerChan,
-		DoneChan: mailerDoneChan,
+		Wait:        app.Wait,
+		ErrorChan:   errorChan,
+		MailerChan:  mailerChan,
+		DoneChan:    mailerDoneChan,
 	}
 
 	return m

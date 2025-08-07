@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/amirhasanpour/golang-subscription-service/data"
+	"github.com/amirhasanpour/subscription-service/data"
 	"github.com/phpdave11/gofpdf"
 	"github.com/phpdave11/gofpdf/contrib/gofpdi"
 )
@@ -55,9 +55,9 @@ func (app *Config) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 
 	if !validPassword {
 		msg := Message{
-			To: email,
+			To:      email,
 			Subject: "Failed log in attempt",
-			Data: "Invalid login attempt!",
+			Data:    "Invalid login attempt!",
 		}
 
 		app.sendEmail(msg)
@@ -97,12 +97,12 @@ func (app *Config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 
 	// create a user
 	u := data.User{
-		Email: r.Form.Get("email"),
+		Email:     r.Form.Get("email"),
 		FirstName: r.Form.Get("first-name"),
-		LastName: r.Form.Get("last-name"),
-		Password: r.Form.Get("password"),
-		Active: 0,
-		IsAdmin: 0,
+		LastName:  r.Form.Get("last-name"),
+		Password:  r.Form.Get("password"),
+		Active:    0,
+		IsAdmin:   0,
 	}
 
 	_, err = app.Models.User.Insert(u)
@@ -118,10 +118,10 @@ func (app *Config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 	app.InfoLog.Println(signedURL)
 
 	msg := Message{
-		To: u.Email,
-		Subject: "Active your account",
+		To:       u.Email,
+		Subject:  "Active your account",
 		Template: "confirmation-email",
-		Data: template.HTML(signedURL),
+		Data:     template.HTML(signedURL),
 	}
 
 	app.sendEmail(msg)
@@ -196,15 +196,15 @@ func (app *Config) SubcribeToPlan(w http.ResponseWriter, r *http.Request) {
 		}
 
 		msg := Message{
-			To: user.Email,
-			Subject: "Your invoice",
-			Data: invoice,
+			To:       user.Email,
+			Subject:  "Your invoice",
+			Data:     invoice,
 			Template: "invoice",
 		}
 
 		app.sendEmail(msg)
 	}()
-	
+
 	// generate a manual
 	app.Wait.Add(1)
 	go func() {
@@ -218,9 +218,9 @@ func (app *Config) SubcribeToPlan(w http.ResponseWriter, r *http.Request) {
 		}
 
 		msg := Message{
-			To: user.Email,
+			To:      user.Email,
 			Subject: "Your manual",
-			Data: "Your user manual is attached",
+			Data:    "Your user manual is attached",
 			AttachmentMap: map[string]string{
 				"Manual.pdf": fmt.Sprintf("%s/%d_manual.pdf", tmpPath, user.ID),
 			},

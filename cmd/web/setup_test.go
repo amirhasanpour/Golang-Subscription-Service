@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/alexedwards/scs/v2"
-	"github.com/amirhasanpour/golang-subscription-service/data"
+	"github.com/amirhasanpour/subscription-service/data"
 )
 
 var testApp Config
@@ -29,13 +29,13 @@ func TestMain(m *testing.M) {
 	session.Cookie.Secure = true
 
 	testApp = Config{
-		Session: session,
-		DB: nil,
-		InfoLog: log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
-		ErrorLog: log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
-		Wait: &sync.WaitGroup{},
-		Models: data.TestNew(nil),
-		ErrorChan: make(chan error),
+		Session:       session,
+		DB:            nil,
+		InfoLog:       log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		ErrorLog:      log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+		Wait:          &sync.WaitGroup{},
+		Models:        data.TestNew(nil),
+		ErrorChan:     make(chan error),
 		ErrorChanDone: make(chan bool),
 	}
 
@@ -45,19 +45,19 @@ func TestMain(m *testing.M) {
 	mailerDoneChan := make(chan bool)
 
 	testApp.Mailer = Mail{
-		Wait: testApp.Wait,
-		ErrorChan: errorChan,
+		Wait:       testApp.Wait,
+		ErrorChan:  errorChan,
 		MailerChan: mailerChan,
-		DoneChan: mailerDoneChan,
+		DoneChan:   mailerDoneChan,
 	}
 
 	go func() {
 		for {
-			select{
-			case <- testApp.Mailer.MailerChan:
+			select {
+			case <-testApp.Mailer.MailerChan:
 				testApp.Wait.Done()
-			case <- testApp.Mailer.ErrorChan:
-			case <- testApp.Mailer.DoneChan:
+			case <-testApp.Mailer.ErrorChan:
+			case <-testApp.Mailer.DoneChan:
 				return
 			}
 		}
@@ -65,10 +65,10 @@ func TestMain(m *testing.M) {
 
 	go func() {
 		for {
-			select{
-			case err := <- testApp.ErrorChan:
+			select {
+			case err := <-testApp.ErrorChan:
 				testApp.ErrorLog.Println(err)
-			case <- testApp.ErrorChanDone:
+			case <-testApp.ErrorChanDone:
 				return
 			}
 		}
